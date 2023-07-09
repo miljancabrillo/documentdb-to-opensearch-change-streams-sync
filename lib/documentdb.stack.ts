@@ -1,7 +1,6 @@
 import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { DatabaseCluster } from 'aws-cdk-lib/aws-docdb';
 import { InstanceClass, InstanceSize, InstanceType, SecurityGroup, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
-import { ISecret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 
 export interface DocumentDbStackProps extends StackProps {
@@ -20,7 +19,7 @@ export class DocumentDbStack extends Stack {
 
     private createDocumentDbCluster() {
         this.documentDbCluster = new DatabaseCluster(this, 'DocumentDbCluster', {
-            dbClusterName: 'documentdb-cluster',
+            dbClusterName: 'change-streams-demo-documentdb-cluster',
             masterUser: {
                 username: 'admin',
                 secretName: 'documentdb/admin'

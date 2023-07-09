@@ -18,7 +18,7 @@ export class OpenSearchStack extends Stack {
 
     private createDomain() {
         this.openSearchDomain = new Domain(this, 'OpenSearchDomain', {
-            domainName: 'opensearch-domain',
+            domainName: 'change-streams-demo-domain',
             version: EngineVersion.OPENSEARCH_2_3,
             vpc: this.props.vpc,
             vpcSubnets: [{ subnets: [this.props.vpc.privateSubnets[0]] }],

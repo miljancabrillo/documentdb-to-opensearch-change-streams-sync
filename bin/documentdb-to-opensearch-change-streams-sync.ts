@@ -4,6 +4,7 @@ import { App, Tags } from 'aws-cdk-lib';
 import { VpcStack } from '../lib/vpc.stack';
 import { DocumentDbStack } from '../lib/documentdb.stack';
 import { OpenSearchStack } from '../lib/opensearch.stack';
+import { LambdaStack } from '../lib/lambda.stack';
 
 const env = {
     region: 'eu-west-1'
@@ -26,4 +27,15 @@ const openSearchStack = new OpenSearchStack(app, 'opensearch-stack', {
     env,
     vpc: vpcStack.vpc,
     openSearchSecurityGroup: vpcStack.openSearchSecurityGroup
+});
+
+new LambdaStack(app, 'lambda-stack', {
+    env,
+    vpc: vpcStack.vpc,
+    lambdSecurityGroup: vpcStack.lambdaSecurityGroup,
+    documentDbSecretArn: documentDbStack.getSecretArn(),
+    documentDbEndpoint: documentDbStack.getClusterEndpoint(),
+    documentDbClusterArn: documentDbStack.getClusterArn(),
+    openSearchDomainArn: openSearchStack.getDomainArn(),
+    openSearchDomainEndpoint: openSearchStack.getDomainEndpoint()
 });

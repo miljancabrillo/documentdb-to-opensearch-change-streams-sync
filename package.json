@@ -1,8 +1,8 @@
 {
-  "name": "documentdb-to-opensearch-sync",
+  "name": "documentdb-to-opensearch-change-streams-sync",
   "version": "0.1.0",
   "bin": {
-    "documentdb-to-opensearch-sync": "bin/documentdb-to-opensearch-sync.js"
+    "documentdb-to-opensearch-sync": "bin/documentdb-to-opensearch-change-streams-sync.js"
   },
   "scripts": {
     "build": "tsc",

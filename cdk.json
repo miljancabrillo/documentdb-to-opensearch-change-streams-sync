@@ -1,5 +1,5 @@
 {
-  "app": "npx ts-node --prefer-ts-exts bin/documentdb-to-opensearch-sync.ts",
+  "app": "npx ts-node --prefer-ts-exts bin/documentdb-to-opensearch-change-streams-sync.ts",
   "watch": {
     "include": [
       "**"

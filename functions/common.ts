@@ -18,7 +18,7 @@ export function createOpenSearchClient(): Client {
                     });
                 })
         }),
-        node: process.env.OPEN_SEACH_DOMAIN_ENDPOINT
+        node: `https://${process.env.OPEN_SEACH_DOMAIN_ENDPOINT}`
     });
 }
 

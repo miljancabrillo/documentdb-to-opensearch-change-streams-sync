@@ -8,7 +8,7 @@ export async function handler(changeStream: any) {
 
         const { _id, ...document } = event.fullDocument;
         await client.index({
-            index: 'demo-data',
+            index: 'demo-index',
             id: _id.$oid,
             body: document
         });

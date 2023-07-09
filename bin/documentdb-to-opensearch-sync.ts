@@ -2,6 +2,8 @@
 import 'source-map-support/register';
 import { App, Tags } from 'aws-cdk-lib';
 import { VpcStack } from '../lib/vpc.stack';
+import { DocumentDbStack } from '../lib/documentdb.stack';
+import { OpenSearchStack } from '../lib/opensearch.stack';
 
 const env = {
     region: 'eu-west-1'
@@ -12,4 +14,16 @@ Tags.of(app).add('Application', 'change-streams-demo');
 
 const vpcStack = new VpcStack(app, 'vpc-stack', {
     env
+});
+
+const documentDbStack = new DocumentDbStack(app, 'documentdb-stack', {
+    env,
+    vpc: vpcStack.vpc,
+    documentDbSecurityGroup: vpcStack.documentDbSecurityGroup
+});
+
+const openSearchStack = new OpenSearchStack(app, 'opensearch-stack', {
+    env,
+    vpc: vpcStack.vpc,
+    openSearchSecurityGroup: vpcStack.openSearchSecurityGroup
 });

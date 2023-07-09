@@ -21,7 +21,7 @@ export class OpenSearchStack extends Stack {
             domainName: 'change-streams-demo-domain',
             version: EngineVersion.OPENSEARCH_2_3,
             vpc: this.props.vpc,
-            vpcSubnets: [{ subnetType: SubnetType.PRIVATE_WITH_EGRESS }],
+            vpcSubnets: [{ subnets: [this.props.vpc.privateSubnets[0]] }],
             securityGroups: [this.props.openSearchSecurityGroup],
             capacity: {
                 dataNodes: 1,

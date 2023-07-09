@@ -13,23 +13,23 @@ const env = {
 const app = new App();
 Tags.of(app).add('Application', 'change-streams-demo');
 
-const vpcStack = new VpcStack(app, 'vpc-stack', {
+const vpcStack = new VpcStack(app, 'change-streams-demo-vpc-stack', {
     env
 });
 
-const documentDbStack = new DocumentDbStack(app, 'documentdb-stack', {
+const documentDbStack = new DocumentDbStack(app, 'change-streams-demo-documentdb-stack', {
     env,
     vpc: vpcStack.vpc,
     documentDbSecurityGroup: vpcStack.documentDbSecurityGroup
 });
 
-const openSearchStack = new OpenSearchStack(app, 'opensearch-stack', {
+const openSearchStack = new OpenSearchStack(app, 'change-streams-demo-opensearch-stack', {
     env,
     vpc: vpcStack.vpc,
     openSearchSecurityGroup: vpcStack.openSearchSecurityGroup
 });
 
-new LambdaStack(app, 'lambda-stack', {
+new LambdaStack(app, 'change-streams-demo-lambda-stack', {
     env,
     vpc: vpcStack.vpc,
     lambdSecurityGroup: vpcStack.lambdaSecurityGroup,

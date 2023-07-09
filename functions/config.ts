@@ -1,14 +1,17 @@
-import { DOCUMENTDB_COLLECTION, DOCUMENTDB_DATABASE, createMongoClient } from './common';
+import { createMongoClient } from './common';
 
 export async function handler(event: any) {
     const client = await createMongoClient();
-    const db = client.db(DOCUMENTDB_DATABASE);
+    const db = client.db('demo-db');
 
-    await db.createCollection(DOCUMENTDB_COLLECTION);
+    await db.createCollection('demo-collection');
     await db.admin().command({
         modifyChangeStreams: 1,
-        database: DOCUMENTDB_DATABASE,
-        collection: DOCUMENTDB_COLLECTION,
+        database: 'demo-db',
+        collection: 'demo-collection',
         enable: true
     });
+
+    client.close();
+    return { statusCode: 200 };
 }

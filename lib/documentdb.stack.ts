@@ -19,12 +19,13 @@ export class DocumentDbStack extends Stack {
 
     private createDocumentDbCluster() {
         this.documentDbCluster = new DatabaseCluster(this, 'DocumentDbCluster', {
-            dbClusterName: 'change-streams-demo-documentdb-cluster',
+            dbClusterName: 'change-streams-demo-cluster',
+            engineVersion: '4.0.0',
             masterUser: {
-                username: 'admin',
-                secretName: 'documentdb/admin'
+                username: 'admin_user',
+                secretName: 'documentdb/admin_user'
             },
-            instanceType: InstanceType.of(InstanceClass.STANDARD5, InstanceSize.MICRO),
+            instanceType: InstanceType.of(InstanceClass.T3, InstanceSize.MEDIUM),
             vpcSubnets: {
                 subnetType: SubnetType.PRIVATE_WITH_EGRESS
             },
@@ -42,7 +43,7 @@ export class DocumentDbStack extends Stack {
         return this.documentDbCluster.clusterEndpoint.hostname;
     }
 
-    public getClusterArn(): string {
+    public getClusterIdentifier(): string {
         return this.documentDbCluster.clusterIdentifier;
     }
 }

@@ -1,4 +1,4 @@
-import { OPENSEARCH_INDEX, createOpenSearchClient } from './common';
+import { createOpenSearchClient } from './common';
 
 export async function handler(changeStream: any) {
     const client = createOpenSearchClient();
@@ -8,7 +8,7 @@ export async function handler(changeStream: any) {
 
         const { _id, ...document } = event.fullDocument;
         await client.index({
-            index: OPENSEARCH_INDEX,
+            index: 'demo-data',
             id: _id.$oid,
             body: document
         });

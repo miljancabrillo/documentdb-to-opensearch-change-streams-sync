@@ -35,7 +35,7 @@ new LambdaStack(app, 'lambda-stack', {
     lambdSecurityGroup: vpcStack.lambdaSecurityGroup,
     documentDbSecretArn: documentDbStack.getSecretArn(),
     documentDbEndpoint: documentDbStack.getClusterEndpoint(),
-    documentDbClusterArn: documentDbStack.getClusterArn(),
+    documentDbClusterIdentifier: documentDbStack.getClusterIdentifier(),
     openSearchDomainArn: openSearchStack.getDomainArn(),
     openSearchDomainEndpoint: openSearchStack.getDomainEndpoint()
 });

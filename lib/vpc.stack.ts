@@ -1,5 +1,5 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
-import { Peer, Port, SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { Port, SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 
 export class VpcStack extends Stack {
@@ -16,7 +16,7 @@ export class VpcStack extends Stack {
     }
 
     private createVpc() {
-        this.vpc = new Vpc(this, 'Vpc');
+        this.vpc = new Vpc(this, 'Vpc', { vpcName: 'change-streams-demo-vpc' });
     }
 
     private createSecurityGroups() {
@@ -32,22 +32,14 @@ export class VpcStack extends Stack {
             vpc: this.vpc
         });
 
-        this.openSearchSecurityGroup.addIngressRule(
-            Peer.securityGroupId(this.lambdaSecurityGroup.securityGroupId),
-            Port.tcp(443),
-            'Access from Lambda functions'
-        );
+        this.openSearchSecurityGroup.addIngressRule(this.lambdaSecurityGroup, Port.tcp(443), 'Access from Lambda functions');
+
+        this.documentDbSecurityGroup.addIngressRule(this.lambdaSecurityGroup, Port.tcp(27017), 'Access from Lambda functions');
 
         this.documentDbSecurityGroup.addIngressRule(
-            Peer.securityGroupId(this.lambdaSecurityGroup.securityGroupId),
+            this.documentDbSecurityGroup,
             Port.tcp(27017),
-            'Access from Lambda functions'
-        );
-
-        this.documentDbSecurityGroup.addIngressRule(
-            Peer.securityGroupId(this.documentDbSecurityGroup.securityGroupId),
-            Port.tcp(27017),
-            'Self referencing inbound rule - acces from Event Source Mapping'
+            'Self referencing inbound rule - access from Event Source Mapping'
         );
     }
 }

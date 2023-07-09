@@ -1,5 +1,5 @@
 import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
-import { SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { SecurityGroup, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { Domain, EngineVersion } from 'aws-cdk-lib/aws-opensearchservice';
 import { Construct } from 'constructs';
 
@@ -21,7 +21,7 @@ export class OpenSearchStack extends Stack {
             domainName: 'change-streams-demo-domain',
             version: EngineVersion.OPENSEARCH_2_3,
             vpc: this.props.vpc,
-            vpcSubnets: [{ subnets: [this.props.vpc.privateSubnets[0]] }],
+            vpcSubnets: [{ subnetType: SubnetType.PRIVATE_WITH_EGRESS }],
             securityGroups: [this.props.openSearchSecurityGroup],
             capacity: {
                 dataNodes: 1,

@@ -3,10 +3,6 @@ import { AwsSigv4Signer } from '@opensearch-project/opensearch/aws';
 import * as AWS from 'aws-sdk';
 import { MongoClient } from 'mongodb';
 
-export const DOCUMENTDB_DATABASE = 'demo';
-export const DOCUMENTDB_COLLECTION = 'demo-data';
-export const OPENSEARCH_INDEX = 'demo-data';
-
 export function createOpenSearchClient(): Client {
     return new Client({
         ...AwsSigv4Signer({
@@ -32,5 +28,10 @@ export async function createMongoClient(): Promise<MongoClient> {
     const secret = await secretsManager.getSecretValue({ SecretId: process.env.DOCUMENT_DB_SECRET as string }).promise();
     const credentials = JSON.parse(secret.SecretString as string);
 
-    return new MongoClient(`mongodb://${credentials.username}:${credentials.password}@${process.env.DOCUMENT_DB_ENDPOINT}`);
+    const client = new MongoClient(`mongodb://${credentials.username}:${encodeURIComponent(credentials.password)}@${process.env.DOCUMENT_DB_ENDPOINT}`, {
+        tls: true,
+        tlsCAFile: 'global-bundle.pem',
+        retryWrites: false
+    });
+    return client.connect();
 }

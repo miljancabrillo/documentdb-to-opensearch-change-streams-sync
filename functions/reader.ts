@@ -1,10 +1,10 @@
-import { OPENSEARCH_INDEX, createOpenSearchClient } from './common';
+import { createOpenSearchClient } from './common';
 
 export async function handler() {
     const client = createOpenSearchClient();
 
     const searchResponse = await client.search({
-        index: OPENSEARCH_INDEX,
+        index: 'demo-index',
         body: {
             query: {
                 match_all: {}
@@ -12,5 +12,6 @@ export async function handler() {
         }
     });
 
-    return searchResponse.body.hits.hits;
+    client.close();
+    return { statusCode: 200, body: searchResponse.body.hits.hits };
 }

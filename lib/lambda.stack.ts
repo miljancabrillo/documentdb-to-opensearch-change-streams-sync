@@ -1,5 +1,5 @@
-import { Stack, StackProps } from 'aws-cdk-lib';
-import { LambdaIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
+import { Duration, Stack, StackProps } from 'aws-cdk-lib';
+import { LambdaIntegration, Resource, RestApi } from 'aws-cdk-lib/aws-apigateway';
 import { SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { ManagedPolicy, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { CfnEventSourceMapping } from 'aws-cdk-lib/aws-lambda';
@@ -12,29 +12,37 @@ export interface LambdaStackProps extends StackProps {
     lambdSecurityGroup: SecurityGroup;
     documentDbSecretArn: string;
     documentDbEndpoint: string;
-    documentDbClusterArn: string;
+    documentDbClusterIdentifier: string;
     openSearchDomainArn: string;
     openSearchDomainEndpoint: string;
 }
 
 export class LambdaStack extends Stack {
-    private writerFunction: NodejsFunction;
-    private readerFunction: NodejsFunction;
-    private indexingFunction: NodejsFunction;
-    private configFunction: NodejsFunction;
+    private syncFunction: NodejsFunction;
+    private demoResource: Resource;
+    private configResource: Resource;
 
     constructor(scope: Construct, id: string, private props: LambdaStackProps) {
         super(scope, id, props);
 
-        this.createLambdaFunctions();
         this.createApiGateway();
+        this.createLambdaFunctions();
         this.createEventSourceMapping();
+    }
+
+    private createApiGateway() {
+        const apiGateway = new RestApi(this, 'ApiGateway', {
+            restApiName: 'change-streams-demo-api-gateway'
+        });
+
+        this.demoResource = apiGateway.root.addResource('demo-data');
+        this.configResource = apiGateway.root.addResource('config');
     }
 
     private createLambdaFunctions() {
         const roles = this.createLambdaRoles();
 
-        this.writerFunction = new NodejsFunction(this, 'WriterLambda', {
+        const writerFunction = new NodejsFunction(this, 'WriterLambda', {
             functionName: 'change-streams-demo-writer',
             entry: path.join(__dirname, '..', 'functions', 'writer.ts'),
             vpc: this.props.vpc,
@@ -43,34 +51,44 @@ export class LambdaStack extends Stack {
                 DOCUMENT_DB_SECRET: this.props.documentDbSecretArn,
                 DOCUMENT_DB_ENDPOINT: this.props.documentDbEndpoint
             },
-            role: roles.documentDbAccessLambdaRole
+            role: roles.documentDbAccessLambdaRole,
+            timeout: Duration.seconds(15),
+            bundling: {
+                commandHooks: {
+                    afterBundling: (inputDir: string, outputDir: string): string[] => [`cp ${inputDir}/certificate/global-bundle.pem ${outputDir}`],
+                    beforeBundling: (inputDir: string, outputDir: string): string[] => [],
+                    beforeInstall: (inputDir: string, outputDir: string): string[] => []
+                }
+            }
         });
+        this.demoResource.addMethod('POST', new LambdaIntegration(writerFunction, { proxy: true }));
 
-        this.readerFunction = new NodejsFunction(this, 'ReaderLambda', {
+        const readerFunction = new NodejsFunction(this, 'ReaderLambda', {
             functionName: 'change-streams-demo-reader',
             entry: path.join(__dirname, '..', 'functions', 'reader.ts'),
             vpc: this.props.vpc,
             securityGroups: [this.props.lambdSecurityGroup],
             environment: {
-                OPEN_SEACH_DOMAIN_ENDPOINT: this.props.openSearchDomainEndpoint,
-                AWS_REGION: Stack.of(this).region
+                OPEN_SEACH_DOMAIN_ENDPOINT: this.props.openSearchDomainEndpoint
             },
-            role: roles.openSearchAccessLambdaRole
+            role: roles.openSearchAccessLambdaRole,
+            timeout: Duration.seconds(15)
         });
+        this.demoResource.addMethod('GET', new LambdaIntegration(readerFunction, { proxy: true }));
 
-        this.indexingFunction = new NodejsFunction(this, 'IndexingLambda', {
-            functionName: 'change-streams-demo-indexing',
-            entry: path.join(__dirname, '..', 'functions', 'indexing.ts'),
+        this.syncFunction = new NodejsFunction(this, 'SyncLambda', {
+            functionName: 'change-streams-demo-sync',
+            entry: path.join(__dirname, '..', 'functions', 'sync.ts'),
             vpc: this.props.vpc,
             securityGroups: [this.props.lambdSecurityGroup],
             environment: {
-                OPEN_SEACH_DOMAIN_ENDPOINT: this.props.openSearchDomainEndpoint,
-                AWS_REGION: Stack.of(this).region
+                OPEN_SEACH_DOMAIN_ENDPOINT: this.props.openSearchDomainEndpoint
             },
-            role: roles.indexingLambdaRole
+            role: roles.indexingLambdaRole,
+            timeout: Duration.seconds(15)
         });
 
-        this.configFunction = new NodejsFunction(this, 'ConfigLambda', {
+        const configFunction = new NodejsFunction(this, 'ConfigLambda', {
             functionName: 'change-streams-demo-config',
             entry: path.join(__dirname, '..', 'functions', 'config.ts'),
             vpc: this.props.vpc,
@@ -79,28 +97,23 @@ export class LambdaStack extends Stack {
                 DOCUMENT_DB_SECRET: this.props.documentDbSecretArn,
                 DOCUMENT_DB_ENDPOINT: this.props.documentDbEndpoint
             },
-            role: roles.documentDbAccessLambdaRole
+            role: roles.documentDbAccessLambdaRole,
+            timeout: Duration.seconds(15),
+            bundling: {
+                commandHooks: {
+                    afterBundling: (inputDir: string, outputDir: string): string[] => [`cp ${inputDir}/certificate/global-bundle.pem ${outputDir}`],
+                    beforeBundling: (inputDir: string, outputDir: string): string[] => [],
+                    beforeInstall: (inputDir: string, outputDir: string): string[] => []
+                }
+            }
         });
-    }
-
-    private createApiGateway() {
-        const apiGateway = new RestApi(this, 'ApiGateway', {
-            restApiName: 'change-streams-demo-api-gateway'
-        });
-
-        const resource = apiGateway.root.addResource('demo-data');
-        resource.addMethod('POST', new LambdaIntegration(this.writerFunction, { proxy: true }));
-        resource.addMethod('GET', new LambdaIntegration(this.readerFunction, { proxy: true }));
-
-        const configResource = apiGateway.root.addResource('config');
-        configResource.addMethod('POST', new LambdaIntegration(this.configFunction, { proxy: true }));
+        this.configResource.addMethod('POST', new LambdaIntegration(configFunction, { proxy: true }));
     }
 
     private createEventSourceMapping() {
         new CfnEventSourceMapping(this, 'DocumentDbEventSourceMapping', {
-            functionName: this.indexingFunction.functionName,
-            eventSourceArn: this.props.documentDbClusterArn,
-
+            functionName: this.syncFunction.functionName,
+            eventSourceArn: `arn:aws:rds:${Stack.of(this).region}:${Stack.of(this).account}:cluster:${this.props.documentDbClusterIdentifier}`,
             sourceAccessConfigurations: [
                 {
                     type: 'BASIC_AUTH',
@@ -110,7 +123,7 @@ export class LambdaStack extends Stack {
             documentDbEventSourceConfig: {
                 collectionName: 'demo-data',
                 databaseName: 'demo',
-                fullDocument: 'fullDocument'
+                fullDocument: 'UpdateLookup'
             }
         });
     }
@@ -150,8 +163,8 @@ export class LambdaStack extends Stack {
             }
         });
 
-        const indexingLambdaRole = new Role(this, 'IndexingLambdaRole', {
-            roleName: 'IndexingLambdaRole',
+        const syncLambdaRole = new Role(this, 'SyncLambdaRole', {
+            roleName: 'SyncLambdaRole',
             assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
             managedPolicies: [ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole')],
             inlinePolicies: {
@@ -176,6 +189,11 @@ export class LambdaStack extends Stack {
                             actions: ['rds:DescribeDBClusters', 'rds:DescribeDBClusterParameters', 'rds:DescribeDBSubnetGroups']
                         }),
                         new PolicyStatement({
+                            sid: 'ESMDocumentDbSecretAccess',
+                            resources: [this.props.documentDbSecretArn],
+                            actions: ['secretsmanager:GetSecretValue']
+                        }),
+                        new PolicyStatement({
                             sid: 'OpenSearchAccess',
                             resources: [`${this.props.openSearchDomainArn}/*`],
                             actions: ['es:ESHttpPost', 'es:ESHttpPut', 'es:ESHttpGet']
@@ -185,6 +203,6 @@ export class LambdaStack extends Stack {
             }
         });
 
-        return { documentDbAccessLambdaRole, openSearchAccessLambdaRole, indexingLambdaRole };
+        return { documentDbAccessLambdaRole, openSearchAccessLambdaRole, indexingLambdaRole: syncLambdaRole };
     }
 }

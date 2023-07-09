@@ -1,14 +1,14 @@
-import { createMongoClient } from './common';
+import { DOCUMENTDB_COLLECTION, DOCUMENTDB_DATABASE, createMongoClient } from './common';
 
 export async function handler(event: any) {
-    const client = createMongoClient();
-    const database = client.db('');
+    const client = await createMongoClient();
+    const db = client.db(DOCUMENTDB_DATABASE);
 
-    await database.createCollection('');
-    await database.admin().command({
+    await db.createCollection(DOCUMENTDB_COLLECTION);
+    await db.admin().command({
         modifyChangeStreams: 1,
-        database: '',
-        collection: '',
+        database: DOCUMENTDB_DATABASE,
+        collection: DOCUMENTDB_COLLECTION,
         enable: true
     });
 }

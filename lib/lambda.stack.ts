@@ -52,7 +52,8 @@ export class LambdaStack extends Stack {
             vpc: this.props.vpc,
             securityGroups: [this.props.lambdSecurityGroup],
             environment: {
-                OPEN_SEACH_DOMAIN_ENDPOINT: this.props.openSearchDomainEndpoint
+                OPEN_SEACH_DOMAIN_ENDPOINT: this.props.openSearchDomainEndpoint,
+                AWS_REGION: Stack.of(this).region
             },
             role: roles.openSearchAccessLambdaRole
         });
@@ -63,7 +64,8 @@ export class LambdaStack extends Stack {
             vpc: this.props.vpc,
             securityGroups: [this.props.lambdSecurityGroup],
             environment: {
-                OPEN_SEACH_DOMAIN_ENDPOINT: this.props.openSearchDomainEndpoint
+                OPEN_SEACH_DOMAIN_ENDPOINT: this.props.openSearchDomainEndpoint,
+                AWS_REGION: Stack.of(this).region
             },
             role: roles.indexingLambdaRole
         });

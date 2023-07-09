@@ -3,10 +3,14 @@ import { AwsSigv4Signer } from '@opensearch-project/opensearch/aws';
 import * as AWS from 'aws-sdk';
 import { MongoClient } from 'mongodb';
 
-export function createOpenSearchClient() {
+export const DOCUMENTDB_DATABASE = 'demo';
+export const DOCUMENTDB_COLLECTION = 'demo-data';
+export const OPENSEARCH_INDEX = 'demo-data';
+
+export function createOpenSearchClient(): Client {
     return new Client({
         ...AwsSigv4Signer({
-            region: 'process.env.AWS_REGION',
+            region: process.env.AWS_REGION as string,
             getCredentials: () =>
                 new Promise((resolve, reject) => {
                     AWS.config.getCredentials((err, credentials) => {
@@ -18,10 +22,15 @@ export function createOpenSearchClient() {
                     });
                 })
         }),
-        node: process.env.OPEN_SEARCH_API
+        node: process.env.OPEN_SEACH_DOMAIN_ENDPOINT
     });
 }
 
-export function createMongoClient() {
-    return new MongoClient(`mongodb://${'USERNAME'}:${'PASSWORD'}@${'HOST'}`);
+export async function createMongoClient(): Promise<MongoClient> {
+    const secretsManager = new AWS.SecretsManager();
+
+    const secret = await secretsManager.getSecretValue({ SecretId: process.env.DOCUMENT_DB_SECRET as string }).promise();
+    const credentials = JSON.parse(secret.SecretString as string);
+
+    return new MongoClient(`mongodb://${credentials.username}:${credentials.password}@${process.env.DOCUMENT_DB_ENDPOINT}`);
 }

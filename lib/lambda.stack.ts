@@ -121,8 +121,8 @@ export class LambdaStack extends Stack {
                 }
             ],
             documentDbEventSourceConfig: {
-                collectionName: 'demo-data',
-                databaseName: 'demo',
+                collectionName: 'demo-collection',
+                databaseName: 'demo-db',
                 fullDocument: 'UpdateLookup'
             }
         });
@@ -168,7 +168,7 @@ export class LambdaStack extends Stack {
             assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
             managedPolicies: [ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole')],
             inlinePolicies: {
-                indexingLambdaPolicy: new PolicyDocument({
+                syncLambdaPolicy: new PolicyDocument({
                     statements: [
                         new PolicyStatement({
                             sid: 'ESMNetworkingAccess',
@@ -184,7 +184,7 @@ export class LambdaStack extends Stack {
                             ]
                         }),
                         new PolicyStatement({
-                            sid: 'ESMAccessDocumentDbAccess',
+                            sid: 'ESMADocumentDbAccess',
                             resources: ['*'],
                             actions: ['rds:DescribeDBClusters', 'rds:DescribeDBClusterParameters', 'rds:DescribeDBSubnetGroups']
                         }),

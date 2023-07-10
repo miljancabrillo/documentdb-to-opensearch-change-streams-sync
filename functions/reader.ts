@@ -13,5 +13,5 @@ export async function handler() {
     });
 
     client.close();
-    return { statusCode: 200, body: searchResponse.body.hits.hits };
+    return { statusCode: 200, body: JSON.stringify(searchResponse.body.hits?.hits) };
 }

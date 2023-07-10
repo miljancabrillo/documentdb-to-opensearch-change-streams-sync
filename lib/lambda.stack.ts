@@ -1,4 +1,4 @@
-import { Duration, Stack, StackProps } from 'aws-cdk-lib';
+import { CfnOutput, Duration, Stack, StackProps } from 'aws-cdk-lib';
 import { LambdaIntegration, Resource, RestApi } from 'aws-cdk-lib/aws-apigateway';
 import { SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { ManagedPolicy, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
@@ -111,7 +111,7 @@ export class LambdaStack extends Stack {
     }
 
     private createEventSourceMapping() {
-        new CfnEventSourceMapping(this, 'DocumentDbEventSourceMapping', {
+        const esm = new CfnEventSourceMapping(this, 'DocumentDbEventSourceMapping', {
             functionName: this.syncFunction.functionName,
             eventSourceArn: `arn:aws:rds:${Stack.of(this).region}:${Stack.of(this).account}:cluster:${this.props.documentDbClusterIdentifier}`,
             sourceAccessConfigurations: [
@@ -120,11 +120,18 @@ export class LambdaStack extends Stack {
                     uri: this.props.documentDbSecretArn
                 }
             ],
+            enabled: false,
             documentDbEventSourceConfig: {
                 collectionName: 'demo-collection',
                 databaseName: 'demo-db',
                 fullDocument: 'UpdateLookup'
             }
+        });
+
+        new CfnOutput(this, 'EventSourceMappingId', {
+            value: esm.attrId,
+            description: 'The id of the ESM',
+            exportName: 'esm-id'
         });
     }
 

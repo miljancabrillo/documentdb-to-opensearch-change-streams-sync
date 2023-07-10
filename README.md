@@ -1,14 +1,4 @@
-# Welcome to your CDK TypeScript project
+# Syncing Data from DocumentDB to OpenSearch using Change Streams
 
-This is a blank project for CDK development with TypeScript.
-
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
-
-## Useful commands
-
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `cdk deploy`      deploy this stack to your default AWS account/region
-* `cdk diff`        compare deployed stack with current state
-* `cdk synth`       emits the synthesized CloudFormation template
+This repository demonstrates how to synchronize changes in real-time from a DocumentDB cluster to an OpenSearch domain using Change Streams and a Lambda function.
+For a detailed explanation of how the solution works, along with instructions on how to deploy and test it, please refer to the article [here](https://dev.to/miljancabrillo/syncing-data-from-documentdb-to-opensearch-using-change-streams-3n00).
